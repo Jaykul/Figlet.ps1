@@ -1,3 +1,4 @@
+using namespace PoshCode.Pansies
 function Get-ColorGradient {
     <#
     .Synopsis
@@ -7,13 +8,13 @@ function Get-ColorGradient {
     param(
         # One or more colors to generate a gradient from
         [Parameter(Mandatory)]
-        [Drawing.Color[]]$Color,
+        [Color[]]$Color,
 
         [int]$Height = $Host.UI.RawUI.WindowSize.Height,
 
         [int]$Width = $Host.UI.RawUI.WindowSize.Width
     )
-    $Colors = new-object Drawing.Color[][] $Height,$Width
+    $Colors = new-object Color[][] $Height,$Width
     $C = [PSCustomObject]@{R = 0; G = 0; B = 0}
     # If we're not doing a color scale, we can return immediately:
     if($Color.Count -eq 1) {
@@ -45,16 +46,24 @@ function Get-ColorGradient {
         ) | Sort-Object Abs -Descending
 
         Write-Verbose ($Diff| Out-String)
+        $DH = [Math]::Max(1,$Height-1)
+        $DW = [Math]::Max(1,$Width-1)
 
-        # Generate colors
+
+        # Generate the gradiens with as many steps in it as the size
         $C.($Diff[2].Color) = [int]($Diff[2].Min + ($Diff[2].Abs/2))
         for ($Line = 0; $Line -lt $Height; $Line++) {
-            $C.($Diff[1].Color) = [int](($Line * $Diff[1].Diff / ($Height-1)) + $Diff[1].First)
+            # the height is usually the short side on Windows
+            # $Diff[1] is the second biggest color range
+            $C.($Diff[1].Color) = [int](($Line * $Diff[1].Diff / $DH) + $Diff[1].First)
 
             for ($Column = 0; $Column -lt $Width; $Column++) {
-                # we need a gradient with as many steps in it as there are characters in buffer size
-                $C.($Diff[0].Color) = [int]((($Column * $Diff[0].Diff) / ($Width-1)) + $Diff[0].First )
-                $Colors[$Line][$Column] =  "{0},{1},{2}" -f $C.R, $C.G, $C.B
+                # we need a gradient with as many steps in it as the size
+                # the width is usually the long side on Windows
+                # $Diff[0] is the biggest color range
+                $C.($Diff[0].Color) = [int]((($Column * $Diff[0].Diff) / $DW) + $Diff[0].First )
+                #$C.($Diff[2].Color) = [int]((($Column * $Diff[2].Diff) / $DW) + $Diff[2].First )
+                $Colors[$Line][$Column] =  [Color]::new($C.R, $C.G, $C.B)
             }
         }
     }

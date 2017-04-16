@@ -9,7 +9,7 @@ function Get-FigFont {
     if(!$FontFolder) {
         $FontFolder = "$PSScriptRoot\fonts","$PSScriptRoot\..\fonts",".\fonts" | Where { Test-Path $_ }
     }
-    Write-Verbose "Searchign for a font matching '$Name' in $FontFolder"
+    Write-Verbose "Searching for a font matching '$Name' in $FontFolder"
     Get-ChildItem $FontFolder -Recurse -Filter *.flf -Include "$Name*.flf" |
         Select FullName -ExpandProperty BaseName |
         Sort

@@ -12,9 +12,9 @@ function Write-Figlet {
         # The font to use FIGfont file (*.flf) should exist in a "Fonts" subfolder
         [string]$FontName = "epic",
 
-        [Drawing.Color[]]$Background,
+        [Color[]]$Background,
 
-        [Drawing.Color[]]$Foreground
+        [Color[]]$Foreground
     )
 
     $Figlet = [Figlet.Net.Figlet]::New()
@@ -34,32 +34,29 @@ function Write-Figlet {
         return
     }
 
-    if(!(Get-Command Write-HostAnsi)) {
+    if(!(Get-Command New-Text)) {
         Write-Warning "Pansies module not available"
         $Ascii | Write-Host
         return
     }
 
     # Run cycles of colors
-
-    if($Background) { [Drawing.Color[][]]$Background = Get-ColorGradient $Background -Height $Height -Width $Width }
-    if($Foreground) { [Drawing.Color[][]]$Foreground = Get-ColorGradient $Foreground -Height $Height -Width $Width }
+    if($Background) { [Color[][]]$Background = Get-ColorGradient $Background -Height $Height -Width $Width }
+    if($Foreground) { [Color[][]]$Foreground = Get-ColorGradient $Foreground -Height $Height -Width $Width }
 
     Write-Verbose ("" + $Foreground.Count + " of " + $Foreground[0].Count)
 
     for ($Line = 0; $Line -lt $Height; $Line++) {
-        Write-Host -NoNewLine (([char]27)+"[m")
-        for ($Column = 0; $Column -lt $Width; $Column++) {
-
+        $Text = $(for ($Column = 0; $Column -lt $Width; $Column++) {
             if($Background -and $Foreground) {
-                Write-HostAnsi ($Ascii[$Line][$Column]) -NoNewLine -Background ($Background[$line][$Column]) -Foreground ($Foreground[$line][$Column])
+                New-Text ($Ascii[$Line][$Column]) -Background ($Background[$line][$Column]) -Foreground ($Foreground[$line][$Column])
             } elseif($Background) {
-                Write-HostAnsi ($Ascii[$Line][$Column]) -NoNewLine -Background ($Background[$line][$Column])
+                New-Text ($Ascii[$Line][$Column]) -Background ($Background[$line][$Column])
             } elseif($Foreground) {
-                Write-HostAnsi ($Ascii[$Line][$Column]) -NoNewLine -Foreground ($Foreground[$line][$Column])
+                New-Text ($Ascii[$Line][$Column]) -Foreground ($Foreground[$line][$Column])
             }
-        }
-        Write-Host (([char]27)+"[m")
+        }) -join ""
+        Write-Host $Text + (New-Text -ClearAfter)
     }
 
 }
